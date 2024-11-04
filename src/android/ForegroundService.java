@@ -174,19 +174,21 @@ public class ForegroundService extends Service {
         // use channelid for Oreo and higher
         String CHANNEL_ID = "cordova-plugin-background-mode-id";
         if(Build.VERSION.SDK_INT >= 26){
-        // The user-visible name of the channel.
-        CharSequence name = "cordova-plugin-background-mode";
-        // The user-visible description of the channel.
-        String description = "cordova-plugin-background-moden notification";
+          // The user-visible name of the channel.
+          CharSequence name = "cordova-plugin-background-mode";
+          // The user-visible description of the channel.
+          String description = "cordova-plugin-background-moden notification";
 
-        int importance = NotificationManager.IMPORTANCE_LOW;
+          int importance = NotificationManager.IMPORTANCE_LOW;
 
-        NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name,importance);
+          NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name,importance);
 
-        // Configure the notification channel.
-        mChannel.setDescription(description);
+          // Configure the notification channel.
+          mChannel.setDescription(description);
 
-        getNotificationManager().createNotificationChannel(mChannel);
+          mChannel.setShowBadge(false);
+
+          getNotificationManager().createNotificationChannel(mChannel);
         }
         String title    = settings.optString("title", NOTIFICATION_TITLE);
         String text     = settings.optString("text", NOTIFICATION_TEXT);
@@ -201,6 +203,9 @@ public class ForegroundService extends Service {
                 .setContentTitle(title)
                 .setContentText(text)
                 .setOngoing(true)
+                .setPriority(Notification.PRIORITY_MIN)
+                // Add this line to prevent badges on older Android versions
+                .setNumber(0)
                 .setSmallIcon(getIconResId(settings));
 
         if(Build.VERSION.SDK_INT >= 26){
@@ -219,15 +224,10 @@ public class ForegroundService extends Service {
         setColor(notification, settings);
 
         if (intent != null && settings.optBoolean("resume")) {
-            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                flags = flags | PendingIntent.FLAG_MUTABLE;
-            }
-
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent contentIntent = PendingIntent.getActivity(
-                    context, NOTIFICATION_ID, intent, flags);
+                    context, NOTIFICATION_ID, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
 
             notification.setContentIntent(contentIntent);
